@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Control System</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Заголовок -->
+        <header class="header">
+            <h1>🎮 Quest Control System</h1>
+            <div class="status">
+                <span id="connection-status" class="status-badge disconnected">Отключено</span>
+                <button id="emergency-stop" class="btn btn-danger">⛔ СТОП ВСЁ</button>
+            </div>
+        </header>
+
+        <!-- Навигация -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="control">🎛️ Управление</button>
+            <button class="tab" data-tab="scenarios">📋 Сценарии</button>
+            <button class="tab" data-tab="devices">⚙️ Устройства</button>
+            <button class="tab" data-tab="sounds">🔊 Звуки</button>
+            <button class="tab" data-tab="settings">⚙️ Настройки</button>
+        </nav>
+
+        <!-- Контент -->
+        <main class="content">
+            <!-- ============ ПАНЕЛЬ УПРАВЛЕНИЯ ============ -->
+            <div id="tab-control" class="tab-content active">
+                <div class="panel-grid">
+                    <!-- Цифровые выходы -->
+                    <div class="panel">
+                        <h2>🔌 Цифровые выходы</h2>
+                        <div id="outputs-list" class="device-grid"></div>
+                    </div>
+
+                    <!-- PWM выходы -->
+                    <div class="panel">
+                        <h2>💡 PWM выходы</h2>
+                        <div id="pwm-list" class="device-grid"></div>
+                    </div>
+
+                    <!-- Входы -->
+                    <div class="panel">
+                        <h2>🔘 Входы</h2>
+                        <div id="inputs-list" class="device-grid"></div>
+                    </div>
+
+                    <!-- Аналоговые входы -->
+                    <div class="panel">
+                        <h2>📊 Аналоговые входы</h2>
+                        <div id="analog-list" class="device-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ СЦЕНАРИИ ============ -->
+            <div id="tab-scenarios" class="tab-content">
+                <div class="scenarios-layout">
+                    <!-- Список сценариев -->
+                    <div class="scenarios-sidebar">
+                        <div class="panel-header">
+                            <h2>📋 Сценарии</h2>
+                            <button id="new-scenario-btn" class="btn btn-primary">+ Новый</button>
+                        </div>
+                        <div id="scenarios-list" class="scenarios-list"></div>
+                    </div>
+
+                    <!-- Редактор сценария -->
+                    <div class="scenario-editor" id="scenario-editor" style="display: none;">
+                        <div class="editor-header">
+                            <input type="text" id="scenario-name" placeholder="Название сценария" class="input-large">
+                            <div class="editor-actions">
+                                <button id="save-scenario-btn" class="btn btn-success">💾 Сохранить</button>
+                                <button id="test-scenario-btn" class="btn btn-primary">▶️ Тест</button>
+                                <button id="close-editor-btn" class="btn">✖️ Закрыть</button>
+                            </div>
+                        </div>
+                        <textarea id="scenario-description" placeholder="Описание сценария" rows="2"></textarea>
+
+                        <!-- Конструктор действий -->
+                        <div class="actions-builder">
+                            <div class="actions-toolbar">
+                                <h3>Действия:</h3>
+                                <select id="action-type" class="select">
+                                    <option value="">-- Добавить действие --</option>
+                                    <option value="wait">⏱️ Задержка</option>
+                                    <option value="output">🔌 Включить выход</option>
+                                    <option value="pwm">💡 Установить PWM</option>
+                                    <option value="sound">🔊 Воспроизвести звук</option>
+                                    <option value="stop_sound">🔇 Остановить звук</option>
+                                    <option value="wait_input">⏳ Ждать сигнал</option>
+                                    <option value="repeat">🔁 Повторить N раз</option>
+                                    <option value="loop">♾️ Бесконечный цикл</option>
+                                </select>
+                            </div>
+                            <div id="actions-list" class="actions-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Плейсхолдер -->
+                    <div class="scenario-placeholder" id="scenario-placeholder">
+                        <div class="placeholder-content">
+                            <h2>📋 Выберите сценарий</h2>
+                            <p>Выберите сценарий из списка слева или создайте новый</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ УСТРОЙСТВА ============ -->
+            <div id="tab-devices" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>⚙️ Устройства</h2>
+                        <button id="add-device-btn" class="btn btn-primary">+ Добавить устройство</button>
+                    </div>
+                    <table class="table" id="devices-table">
+                        <thead>
+                            <tr>
+                                <th>Иконка</th>
+                                <th>Название</th>
+                                <th>Тип</th>
+                                <th>Пин</th>
+                                <th>Группа</th>
+                                <th>Описание</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devices-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ ЗВУКИ ============ -->
+            <div id="tab-sounds" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>🔊 Звуки</h2>
+                        <div>
+                            <input type="file" id="sound-upload" accept="audio/*" style="display: none;">
+                            <button id="upload-sound-btn" class="btn btn-primary">📤 Загрузить звук</button>
+                            <button id="stop-all-sounds-btn" class="btn btn-danger">🔇 Остановить все</button>
+                        </div>
+                    </div>
+                    <div id="sounds-grid" class="sounds-grid"></div>
+                </div>
+            </div>
+
+            <!-- ============ НАСТРОЙКИ ============ -->
+            <div id="tab-settings" class="tab-content">
+                <div class="panel">
+                    <h2>⚙️ Настройки RS485</h2>
+                    <div class="form-group">
+                        <label>Порт:</label>
+                        <input type="text" id="setting-port" class="input" value="/dev/serial0">
+                    </div>
+                    <div class="form-group">
+                        <label>Скорость (baud):</label>
+                        <input type="number" id="setting-baudrate" class="input" value="115200">
+                    </div>
+                    <div class="form-group">
+                        <label>ID устройства:</label>
+                        <input type="number" id="setting-device-id" class="input" value="16">
+                    </div>
+                    <button id="save-settings-btn" class="btn btn-success">💾 Сохранить и переподключить</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования устройства -->
+    <div id="device-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="device-modal-title">Добавить устройство</h2>
+            <div class="form-group">
+                <label>Название:</label>
+                <input type="text" id="device-name" class="input" placeholder="Например: Дверной замок">
+            </div>
+            <div class="form-group">
+                <label>Тип:</label>
+                <select id="device-type" class="select">
+                    <option value="output">Цифровой выход</option>
+                    <option value="pwm">PWM выход</option>
+                    <option value="input">Цифровой вход</option>
+                    <option value="analog">Аналоговый вход</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Пин (0-14):</label>
+                <input type="number" id="device-pin" class="input" min="0" max="14" value="0">
+            </div>
+            <div class="form-group">
+                <label>Иконка:</label>
+                <input type="text" id="device-icon" class="input" value="⚡" maxlength="2">
+            </div>
+            <div class="form-group">
+                <label>Группа:</label>
+                <input type="text" id="device-group" class="input" placeholder="Например: Освещение">
+            </div>
+            <div class="form-group">
+                <label>Описание:</label>
+                <textarea id="device-description" class="input" rows="2"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id="save-device-btn" class="btn btn-success">💾 Сохранить</button>
+                <button id="cancel-device-btn" class="btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования действия -->
+    <div id="action-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="action-modal-title">Настройка действия</h2>
+            <div id="action-form"></div>
+            <div class="modal-actions">
+                <button id="save-action-btn" class="btn btn-success">✔️ Готово</button>
+                <button id="cancel-action-btn" class="btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
