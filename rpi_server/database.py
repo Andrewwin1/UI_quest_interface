@@ -14,7 +14,7 @@ Base = declarative_base()
 
 
 class Device(Base):
-    """Устройство - пин на Arduino"""
+
     __tablename__ = "devices"
 
     id = Column(Integer, primary_key=True, index=True)
