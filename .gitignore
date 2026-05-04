@@ -1,0 +1,20 @@
+# База данных (создаётся автоматически на каждом устройстве)
+rpi_server/quest.db
+quest.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Звуки (загружаются на каждом устройстве отдельно)
+rpi_server/sounds/*
+!rpi_server/sounds/.gitkeep
