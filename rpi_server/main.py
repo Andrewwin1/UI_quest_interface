@@ -26,13 +26,17 @@ ws_clients: List[WebSocket] = []
 
 def git_auto_update():
     """Pull latest changes from git if available"""
+    import subprocess
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def run(cmd):
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=15, cwd=repo)
+
     try:
-        import subprocess
-        result = subprocess.run(
-            ["git", "pull", "--ff-only"],
-            capture_output=True, text=True, timeout=15,
-            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
+        # stash local changes (e.g. quest.db if still tracked on old installs)
+        run(["git", "stash", "--include-untracked", "-m", "auto-stash before pull"])
+
+        result = run(["git", "pull", "--ff-only"])
         if "Already up to date" in result.stdout:
             print("Git: already up to date")
         elif result.returncode == 0:
