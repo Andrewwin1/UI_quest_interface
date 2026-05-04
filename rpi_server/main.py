@@ -24,10 +24,30 @@ engine: Optional[ScenarioEngine] = None
 ws_clients: List[WebSocket] = []
 
 
+def git_auto_update():
+    """Pull latest changes from git if available"""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["git", "pull", "--ff-only"],
+            capture_output=True, text=True, timeout=15,
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        if "Already up to date" in result.stdout:
+            print("Git: already up to date")
+        elif result.returncode == 0:
+            print(f"Git: updated\n{result.stdout.strip()}")
+        else:
+            print(f"Git: pull failed — {result.stderr.strip()}")
+    except Exception as e:
+        print(f"Git: auto-update skipped ({e})")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global engine
     # Startup
+    git_auto_update()
     init_db()
     os.makedirs("sounds", exist_ok=True)
     engine = ScenarioEngine(queen, get_db)

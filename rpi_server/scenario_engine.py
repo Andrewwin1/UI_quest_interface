@@ -154,11 +154,32 @@ class ScenarioEngine:
                     self._execute_action(sub, stop_event)
 
         elif action_type == "loop":
-            # Бесконечный цикл пока не остановят
             sub_actions = action.get("actions", [])
             while not stop_event.is_set():
                 for sub in sub_actions:
                     if stop_event.is_set():
+                        break
+                    self._execute_action(sub, stop_event)
+
+        elif action_type == "while_loop":
+            # Цикл с условием выхода: по сигналу, по таймауту или по первому из двух
+            sub_actions = action.get("actions", [])
+            exit_pin = action.get("exit_pin", -1)       # -1 = не используется
+            exit_state = action.get("exit_state", 1)    # ожидаемое состояние входа
+            timeout_ms = action.get("timeout_ms", 0)    # 0 = не используется
+            deadline = (time.time() + timeout_ms / 1000.0) if timeout_ms > 0 else None
+
+            while not stop_event.is_set():
+                if deadline and time.time() >= deadline:
+                    break
+                if exit_pin >= 0 and self.driver.get_input(exit_pin) == exit_state:
+                    break
+                for sub in sub_actions:
+                    if stop_event.is_set():
+                        break
+                    if deadline and time.time() >= deadline:
+                        break
+                    if exit_pin >= 0 and self.driver.get_input(exit_pin) == exit_state:
                         break
                     self._execute_action(sub, stop_event)
 
