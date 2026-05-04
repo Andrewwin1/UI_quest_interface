@@ -24,7 +24,12 @@ class ScenarioEngine:
         self.stop_events: Dict[int, Event] = {}
 
         # Инициализируем pygame для звука
-        pygame.mixer.init()
+        self.sound_available = False
+        try:
+            pygame.mixer.init()
+            self.sound_available = True
+        except Exception as e:
+            print(f"Sound: audio unavailable ({e})")
         self.current_sounds: Dict[str, pygame.mixer.Sound] = {}
 
     def start_scenario(self, scenario_id: int, actions: List[Dict]) -> bool:
@@ -108,6 +113,8 @@ class ScenarioEngine:
             self.driver.set_pwm(pin, power, strobo)
 
         elif action_type == "sound":
+            if not self.sound_available:
+                return
             filename = action.get("file", "")
             volume = action.get("volume", 100) / 100.0
             loop = action.get("loop", False)
@@ -121,6 +128,8 @@ class ScenarioEngine:
                 print(f"Sound error: {e}")
 
         elif action_type == "stop_sound":
+            if not self.sound_available:
+                return
             filename = action.get("file", "")
             if filename:
                 if filename in self.current_sounds:
@@ -184,7 +193,8 @@ class ScenarioEngine:
                     self._execute_action(sub, stop_event)
 
     def play_sound(self, filename: str, volume: float = 1.0):
-        """Воспроизвести звук напрямую"""
+        if not self.sound_available:
+            return
         try:
             sound = pygame.mixer.Sound(f"sounds/{filename}")
             sound.set_volume(volume)
@@ -193,7 +203,8 @@ class ScenarioEngine:
             print(f"Sound error: {e}")
 
     def stop_sound(self, filename: str = ""):
-        """Остановить звук"""
+        if not self.sound_available:
+            return
         if filename and filename in self.current_sounds:
             self.current_sounds[filename].stop()
         else:
